@@ -81,7 +81,7 @@ def parse_args(test_area=None):
     parser.add_argument('--k', type=int, default=20, metavar='N', help='Num of nearest neighbors to use')
     parser.add_argument('--point_cloud', type=str, required=True, help='Name of point cloud data')
     parser.add_argument('--block_size', type=int, default= 1000, help='Size of each block')
-    parser.add_argument('--cell_size', type=float, default=1, help='Cell Size for creating DSM and DTM')
+    parser.add_argument('--cell_size', type=float, default=1.0, help='Cell Size for creating DSM and DTM')
     return parser.parse_args()
 
 def add_vote(vote_label_pool, point_idx, pred_label, weight):
