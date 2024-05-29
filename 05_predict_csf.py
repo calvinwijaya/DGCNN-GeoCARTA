@@ -127,9 +127,20 @@ def csf(data, xyz, args):
     
     # Iterate through blocks and save each block into a separate .npy file
     for i, block_data in enumerate(blocks):
-        filename_offground_npy = os.path.join(data_dir, f'Area_{i}.npy')
-        np.save(filename_offground_npy, block_data)
-        # print(f"Saved {filename_offground_npy}")
+        # Convert block_data to bytes
+        block_data_bytes = block_data.tobytes()
+
+        # Calculate the size of block_data in bytes
+        block_data_size = len(block_data_bytes)
+
+        # Check if the size is below 1 MB (1,048,576 bytes)
+        if block_data_size > 1_048_576:
+            filename_offground_npy = os.path.join(data_dir, f'Area_{i}.npy')
+            # Save the block_data if it meets the size criteria
+            np.save(filename_offground_npy, block_data)
+            print(f"Saved: {filename_offground_npy} (size: {block_data_size} bytes)")
+        else:
+            print(f"Skipped: Block data size {block_data_size} bytes < 1 MB")
 
 def save_las(X, filename):
     header = laspy.LasHeader(point_format=2, version="1.2")
