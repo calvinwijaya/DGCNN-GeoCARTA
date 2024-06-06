@@ -19,6 +19,7 @@ import sys
 import numpy as np
 import laspy
 import time
+import re
 
 from data_utils.split_merge_las import *
 
@@ -58,7 +59,8 @@ def save_las(X, filename):
     las.red = X[:, 3]
     las.green = X[:, 4]
     las.blue = X[:, 5]
-    las.classification = X[:, 6]
+    las.intensity = X[:, 6]
+    las.classification = X[:, 7]
     las.write(filename + ".las")
 
 def parse_args(test_area=None):
@@ -192,7 +194,7 @@ def main(args):
             whole_scene_data[:, 0:2] += xy_min
 
             for i in range(whole_scene_label.shape[0]):
-                data_point = [whole_scene_data[i, 0], whole_scene_data[i, 1], whole_scene_data[i, 2], whole_scene_data[i, 3], whole_scene_data[i, 4], whole_scene_data[i, 5], pred_label[i]]
+                data_point = [whole_scene_data[i, 0], whole_scene_data[i, 1], whole_scene_data[i, 2], whole_scene_data[i, 3], whole_scene_data[i, 4], whole_scene_data[i, 5], whole_scene_data[i, 6], pred_label[i]]
                 result_data.append(data_point)
             
             result_data = np.array(result_data)
@@ -245,12 +247,29 @@ if __name__ == '__main__':
         else:
             print(f'Skipped: Block data size {block_data_size} bytes < 1 MB')
 
-    num_areas = sum(1 for file in os.listdir(data_dir) if file.endswith('.npy'))
+    # num_areas = sum(1 for file in os.listdir(data_dir) if file.endswith('.npy'))
+    
+    # Update: change how num_areas is called
+    # List to store the numbers
+    areas = []
+
+    # Iterate over all files in the folder
+    for filename in os.listdir(data_dir):
+        # Check if the filename matches the pattern "Area_<number>.npy"
+        match = re.match(r'Area_(\d+)\.npy', filename)
+        if match:
+            # Extract the number and convert it to an integer
+            number = int(match.group(1))
+            # Add the number to the list
+            areas.append(number)
+
+    # Sort the list of numbers
+    areas.sort()
     
     # data = []
     
     print("Start classification")
-    for test_area in range(num_areas):
+    for test_area in areas:
         print("Classify Block ", test_area)
         args = parse_args(test_area)
         main(args)
