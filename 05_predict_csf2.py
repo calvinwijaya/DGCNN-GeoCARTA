@@ -236,6 +236,8 @@ def main(args):
                 result_data.append(data_point)
             
             result_data = np.array(result_data)
+            result_data[result_data[:, -1] == 0, -1] = 6
+            result_data[result_data[:, -1] == 1, -1] = 5
             
     return result_data
            
@@ -269,6 +271,8 @@ if __name__ == '__main__':
         print("Block", i, "contains", len(block), "points")     
         result_ground, result_offground = csf(block, block[:,:3], args)
 
+        result_ground[result_ground[:, -1] == 1, -1] = 2
+
         result_offground[:, 0:2] -= xy_min
 
         block_data_bytes = block.tobytes()
@@ -298,25 +302,36 @@ if __name__ == '__main__':
         result = main(args)
         data.append(result)
     
+    print("Classification done, save las file per blocks")
+    experiment_dir = 'log/sem_seg/' + args.log_dir
+
+    filename = os.path.basename(str(args.point_cloud))
+    filename = os.path.splitext(filename)[0]
+    visual_dir = experiment_dir + '/visual/'
+    visual_dir = Path(visual_dir)
+    visual_dir.mkdir(exist_ok=True)
+
+    # to save las per block
+    for i in range(len(ground)):
+        data[i][:, 0:2] += xy_min
+        merged_array = np.vstack((data[i], ground[i]))
+        filename_merge = os.path.join(visual_dir, filename + '-block-' + str(i))
+        save_las(merged_array, filename_merge)
+    
+    '''
+    # To save las merge as one file only
     merged_data = np.concatenate(data, axis=0)
     merged_data[:, 0:2] += xy_min 
     print("Classification done, merge all blocks")
     
     ground_combined = np.vstack(ground)
-    ground_combined[:, -1] = 2
     merge = np.vstack((merged_data, ground_combined)) #.astype(np.float16)
-
-    experiment_dir = 'log/sem_seg/' + args.log_dir
-    visual_dir = experiment_dir + '/visual/'
-    visual_dir = Path(visual_dir)
-    visual_dir.mkdir(exist_ok=True)
-    filename = os.path.basename(str(args.point_cloud))
-    filename = os.path.splitext(filename)[0]
     filename_merge = os.path.join(visual_dir, filename + '_class')
     save_las(merge, filename_merge)
     
     print("Done!")
-        
+    '''
+
     # Record the end time
     end_time = time.time()
     
