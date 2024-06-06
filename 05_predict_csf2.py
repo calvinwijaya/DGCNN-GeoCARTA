@@ -250,7 +250,7 @@ if __name__ == '__main__':
 
     # Transform to Local coordinate
     xy_min = np.amin(data, axis=0)[0:2]
-    
+
     data_dir = 'data/split'
     if not os.path.exists(data_dir):
         os.makedirs(data_dir)
