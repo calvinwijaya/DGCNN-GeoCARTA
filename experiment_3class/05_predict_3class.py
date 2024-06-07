@@ -22,6 +22,7 @@ import time
 import re
 
 from data_utils.split_merge_las import *
+from data_utils.merge_las import append_to_las
 
 BASE_DIR = os.path.dirname(os.path.abspath(os.getcwd()))
 ROOT_DIR = BASE_DIR
@@ -61,7 +62,7 @@ def save_las(X, filename):
     las.blue = X[:, 5]
     las.intensity = X[:, 6]
     las.classification = X[:, 7]
-    las.write(filename + ".las")
+    las.write(filename + ".las")    
 
 def parse_args(test_area=None):
     parser = argparse.ArgumentParser('Model')
@@ -92,36 +93,13 @@ def add_vote(vote_label_pool, point_idx, pred_label, weight):
                     print(f"Warning: Predicted label {int(pred_label[b, n])} is out of bounds for the current class range.")
     return vote_label_pool
 
-def main(args):
+def main(args, filename):
     # def log_string(str):
     #     logger.info(str)
     #     print(str)
     
     '''HYPER PARAMETER'''
     os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu
-    experiment_dir = 'log/sem_seg/' + args.log_dir
-    visual_dir = experiment_dir + '/visual/'
-    visual_dir = Path(visual_dir)
-    visual_dir.mkdir(exist_ok=True)
-
-    '''LOG'''
-    # logger = logging.getLogger("Model")
-    # logger.setLevel(logging.INFO)
-    # formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    # file_handler = logging.FileHandler('%s/eval.txt' % experiment_dir)
-    # file_handler.setLevel(logging.INFO)
-    # file_handler.setFormatter(formatter)
-    # logger.addHandler(file_handler)
-    # log_string('PARAMETER ...')
-    # log_string(args)
-    
-    # Buat folder untuk per block
-    experiment_dir = 'log/sem_seg/' + args.log_dir
-    filename = os.path.basename(str(args.point_cloud))
-    filename = os.path.splitext(filename)[0]
-    visual_dir = experiment_dir + '/visual/' + filename
-    visual_dir = Path(visual_dir)
-    visual_dir.mkdir(exist_ok=True)
 
     NUM_CLASSES = args.num_classes
     BATCH_SIZE = args.batch_size
@@ -223,7 +201,7 @@ if __name__ == '__main__':
     data_dir = 'data/sem_seg_data'
     if not os.path.exists(data_dir):
         os.makedirs(data_dir)
-    
+                
     num_blocks_x, num_blocks_y = calculate_block_size(data, args.block_size)
     print("Number of blocks in x direction:", num_blocks_x)
     print("Number of blocks in y direction:", num_blocks_y)
@@ -268,38 +246,64 @@ if __name__ == '__main__':
     
     # data = []
     
+    # Buat folder untuk per block
+    experiment_dir = 'log/sem_seg/' + args.log_dir
+    filename = os.path.basename(str(args.point_cloud))
+    filename = os.path.splitext(filename)[0]
+    visual_dir = experiment_dir + '/visual/' + filename
+    visual_dir = Path(visual_dir)
+    visual_dir.mkdir(exist_ok=True)
+    
     print("Start classification")
     for test_area in areas:
         print("Classify Block ", test_area)
         args = parse_args(test_area)
-        main(args)
+        main(args, filename)
         # result = main(args)
         # data.append(result)
+        
+    # Tambahan merge las
+    print('Running Merge LAS')
     
-    '''
-    # Tambahan
-    # Buat save las per block
-    print("Classification done, save las file per blocks")
-    experiment_dir = 'log/sem_seg/' + args.log_dir
-    filename = os.path.basename(str(args.point_cloud))
-    filename = os.path.splitext(filename)[0]
+    source_file = os.path.join(visual_dir, filename + '-block-' + str(test_area) + '.las')
+    destination_folder = experiment_dir + '/visual/'
     
-    visual_dir = experiment_dir + '/visual/' + filename
-    visual_dir = Path(visual_dir)
-    visual_dir.mkdir(exist_ok=True)
+    shutil.copy(source_file, destination_folder)
+    las_copy = (destination_folder + filename + '-block-' + str(test_area) + '.las')
+    out_las = (destination_folder + filename + '_class.las')
+    os.rename(las_copy, out_las)
+    
+    for (dirpath, dirnames, filenames) in os.walk(visual_dir):
+        for inFile in filenames:
+            if inFile.endswith('.las'):
+                in_las = os.path.join(dirpath, inFile)
+                append_to_las(in_las, out_las)
+        
+    print('Finished without errors - merge_LAS.py')
+    
+    # # Tambahan
+    # # Buat save las per block
+    # print("Classification done, save las file per blocks")
+    # experiment_dir = 'log/sem_seg/' + args.log_dir
+    # filename = os.path.basename(str(args.point_cloud))
+    # filename = os.path.splitext(filename)[0]
+    
+    # visual_dir = experiment_dir + '/visual/' + filename
+    # visual_dir = Path(visual_dir)
+    # visual_dir.mkdir(exist_ok=True)
             
-    for i in range(len(data)):
-        data[i][:, 0:2] += xy_min 
-        filename_merge = os.path.join(visual_dir, filename + '-block-' + str(i))
-        save_las(data[i], filename_merge)
+    # for i in range(len(data)):
+    #     data[i][:, 0:2] += xy_min 
+    #     filename_merge = os.path.join(visual_dir, filename + '-block-' + str(i))
+    #     save_las(data[i], filename_merge)
     
-    # Buat save las merge langsung jadi 1
-    print("Classification done, merge all blocks")
-    merged_data = np.concatenate(data, axis=0)
-    merged_data[:, 0:2] += xy_min 
+    # # Buat save las merge langsung jadi 1
+    # print("Classification done, merge all blocks")
+    # merged_data = np.concatenate(data, axis=0)
+    # merged_data[:, 0:2] += xy_min 
     
-    save_las(merged_data, filename_merge)
-    '''
+    # save_las(merged_data, filename_merge)
+
         
     print("Done!")
         
@@ -310,5 +314,6 @@ if __name__ == '__main__':
     elapsed_time = end_time - start_time
     
     shutil.rmtree(data_dir)
+    shutil.rmtree(visual_dir)
 
     print(f"Elapsed Time: {elapsed_time} seconds")
