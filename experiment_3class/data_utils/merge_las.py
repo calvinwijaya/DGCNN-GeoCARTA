@@ -1,8 +1,6 @@
 import laspy
 import os
 
-# check
-
 print('Running Merge LAS')
 
 #This is the las file to append to.  DO NOT STORE THIS FILE IN THE SAME DIRECTORY AS BELOW...

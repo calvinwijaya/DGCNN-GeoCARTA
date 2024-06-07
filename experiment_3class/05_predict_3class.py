@@ -1,5 +1,5 @@
 # 6. Define testing function
-# test
+
 CUDA_LAUNCH_BLOCKING="1"
 
 """
