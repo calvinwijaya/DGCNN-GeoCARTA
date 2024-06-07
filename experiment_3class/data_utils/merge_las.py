@@ -1,7 +1,7 @@
 import laspy
 import os
 
-print('Running Merge LAS')
+# print('Running Merge LAS')
 
 #This is the las file to append to.  DO NOT STORE THIS FILE IN THE SAME DIRECTORY AS BELOW...
 # out_las = 'D:/Train Model SBY for AHY/Model M-DGCNN RGB + Intensity/experiment_3class/log/sem_seg/sby/visual/2_F12 M350 Classified - Test - all_points.las'
