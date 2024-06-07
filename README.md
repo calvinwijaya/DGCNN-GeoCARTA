@@ -7,3 +7,9 @@
 Log:
 ![image](https://github.com/calvinwijaya/DGCNN-GeoCARTA/assets/88726143/f74e62c8-a8dc-490c-9ebd-56f9c849ad14)
 
+Several results:
+![image](https://github.com/calvinwijaya/DGCNN-GeoCARTA/assets/88726143/e522b322-65e7-433f-be82-f523ce0975e0)
+![image](https://github.com/calvinwijaya/DGCNN-GeoCARTA/assets/88726143/fd59e361-8e38-4fc2-ae36-be790c71dfb6)
+
+
+
